@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NJsonSchema.CodeGeneration.TypeScript;
 using NSwag;
@@ -8,7 +9,11 @@ using PP.CompanyManagement.Core.Contracts.Dto;
 using PP.CompanyManagement.Portal.ViewModels.Employee;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace PP.CompanyManagement.Portal.Controllers
@@ -28,6 +33,7 @@ namespace PP.CompanyManagement.Portal.Controllers
         [HttpGet]
         public async Task<GetEmployeesResponse> List()
         {
+            //TODO: paging, sorting, etc.
             var employeeDtos = await this.employeeManager.GetAllAsync();
 
             return new GetEmployeesResponse()
@@ -56,40 +62,25 @@ namespace PP.CompanyManagement.Portal.Controllers
             return this.mapper.Map<UpdateEmployeeResponse>(createRes);
         }
 
-        [HttpGet("test/{url}")]
-        public async Task<string> Test(string url)
+        [HttpPost("import")]
+        public async Task<IEnumerable<ImportResultResponse>> Import(CancellationToken ct)
         {
-            var document = await OpenApiDocument.FromUrlAsync(Uri.UnescapeDataString(url));
+            //TODO: ? https://docs.microsoft.com/en-us/aspnet/core/mvc/models/file-uploads?view=aspnetcore-5.0#upload-large-files-with-streaming
+            IFormFile file = Request.Form.Files[0];
 
-            //var settings = new TypeScriptClientGeneratorSettings
-            //{
-            //    ClassName = "{controller}Client",
-            //};
-            //var generator = new TypeScriptClientGenerator(document, settings);
+            using var stream = file.OpenReadStream();
 
-            var settings = new TypeScriptClientGeneratorSettings
+            // breaks the rule "use bviewmodels only" for performance reasons.
+            //low batchsize for tests
+            var res = await this.employeeManager.Import(stream, batchSize: 3, cancellationToken: ct);
+
+            return res.Select(x => new ImportResultResponse()
             {
-                GenerateClientClasses = false,
-                GenerateClientInterfaces = false,
-                GenerateOptionalParameters = true
-            };
-
-            var typeGeneratorSettings = new TypeScriptGeneratorSettings
-            {
-                DateTimeType = TypeScriptDateTimeType.String,
-                GenerateConstructorInterface = false,
-                MarkOptionalProperties = true,
-                TypeStyle = TypeScriptTypeStyle.Interface
-            };
-
-            var typeResolver = new TypeScriptTypeResolver(typeGeneratorSettings);
-
-            var generator = new TypeScriptClientGenerator(document, settings, typeResolver);
-
-
-            var code = generator.GenerateFile();
-
-            return code;
+                ActionType = x.ActionType,
+                BusinessIdPersonnelNumber = x.BusinessIdPersonnelNumber,
+                BusinessIdType = x.BusinessIdType,
+                Id = x.Id
+            });
         }
     }
 }

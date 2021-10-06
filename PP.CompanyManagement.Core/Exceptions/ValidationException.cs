@@ -8,8 +8,8 @@ namespace PP.CompanyManagement.Core.Exceptions
 {
     public abstract class ValidationException : CustomBaseException
     {
-        protected ValidationException( IEnumerable<string> errors, string? message = null)
-            : base(ToMessage(errors, message))
+        protected ValidationException( IEnumerable<string> errors, string? message = null, Exception? innerException = null)
+            : base(ToMessage(errors, message), innerException)
         {
         }
 

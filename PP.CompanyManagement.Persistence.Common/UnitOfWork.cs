@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using PP.CompanyManagement.Core.Interfaces.Persistence.Common;
 using System;
 using System.Collections.Generic;
@@ -25,6 +26,49 @@ namespace PP.CompanyManagement.Persistence.Common
         /// The disposed flag.
         /// </summary>
         private bool disposed;
+        private int transactionsCount = 0;
+
+        private IDbContextTransaction transaction;
+
+        public bool TransactionOpened
+        {
+            get
+            {
+                return this.transaction != null;
+            }
+        }
+
+        public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
+        {
+            if(this.transaction == null) this.transaction = await this.context.Database.BeginTransactionAsync(cancellationToken);
+
+            this.transactionsCount++;
+        }
+
+        public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
+        {
+            if (this.transaction == null)
+            {
+                throw new InvalidOperationException("There is no open transaction to be committed.");
+            }
+            else if (this.transactionsCount == 1)
+            {
+                await this.transaction.CommitAsync();
+
+                this.transaction.Dispose();
+                this.transaction = null;
+            }
+
+            this.transactionsCount--;
+        }
+
+        public async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
+        {
+            await this.transaction.RollbackAsync(cancellationToken);
+            this.transaction.Dispose();
+            this.transaction = null;
+            this.transactionsCount = 0;
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UnitOfWork{T}" /> class.
@@ -83,6 +127,12 @@ namespace PP.CompanyManagement.Persistence.Common
         {
             if (!this.disposed && disposing)
             {
+                if (this.TransactionOpened)
+                {
+                    this.transaction.Rollback();
+                    this.transaction.Dispose();
+                }
+
                 this.context.Dispose();
             }
 

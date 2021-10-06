@@ -10,7 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PP.CompanyManagement.Persistence.Db.CompanyManagmentMainDbStorage.Context.EntityConfiguration
+namespace PP.CompanyManagement.Persistence.Db.CompanyManagementMainDbStorage.Context.EntityConfiguration
 {
     public class EmployeeEntityConfiguration : EntityConfigurationBase<EmployeeEntity>
     {
@@ -35,7 +35,7 @@ namespace PP.CompanyManagement.Persistence.Db.CompanyManagmentMainDbStorage.Cont
             var typeColName = builder.OwnsOne(x => x.BusinessId)
                 .Property(x => x.Type).Metadata.GetColumnName(StoreObjectIdentifier.Table(tableName, builder.Metadata.GetSchema()));
 
-            builder.HasCheckConstraint($"CK_{tableName}_{numberColName}_{typeColName}", $"([{typeColName}] = {(int)EmployeeType.Staff}) AND [{numberColName}] IS NOT NULL) OR ([{typeColName}] = {(int)EmployeeType.Supplementary}) AND [{numberColName}] IS NULL)");
+            builder.HasCheckConstraint($"CK_{tableName}_{numberColName}_{typeColName}", $"([{typeColName}] = {(int)EmployeeType.Staff} AND [{numberColName}] IS NOT NULL) OR ([{typeColName}] = {(int)EmployeeType.Supplementary} AND [{numberColName}] IS NULL)");
         }
     }
 }

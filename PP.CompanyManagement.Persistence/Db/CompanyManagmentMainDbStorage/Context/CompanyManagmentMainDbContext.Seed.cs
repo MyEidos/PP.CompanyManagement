@@ -6,9 +6,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PP.CompanyManagement.Persistence.Db.CompanyManagmentMainDbStorage.Context
+namespace PP.CompanyManagement.Persistence.Db.CompanyManagementMainDbStorage.Context
 {
-    public partial class CompanyManagmentMainDbContext
+    public partial class CompanyManagementMainDbContext
     {
         protected void Seed(ModelBuilder modelBuilder)
         {

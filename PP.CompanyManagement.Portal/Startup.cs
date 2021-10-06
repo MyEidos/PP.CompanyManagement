@@ -11,8 +11,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using PP.CompanyManagement.Persistence.Db.CompanyManagmentMainDbStorage;
+using PP.CompanyManagement.Persistence.Db.CompanyManagementMainDbStorage;
 using PP.CompanyManagement.Business;
+using System.Reflection;
 
 namespace PP.CompanyManagement.Portal
 {
@@ -28,7 +29,14 @@ namespace PP.CompanyManagement.Portal
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddCors(options =>
+            {
+                options.AddPolicy("CorsDevPolicy",
+                    builder => builder.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader());
+            });
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "PP.CompanyManagement.Portal", Version = "v1" });
@@ -36,8 +44,13 @@ namespace PP.CompanyManagement.Portal
 
             services.AddAutoMapper(typeof(Startup));
 
-            services.AddCompanyManagmentMainStorage(options => Configuration.GetSection("CompanyManagmentMainStorage").Bind(options));
+            services.AddCompanyManagementMainStorage(options => Configuration.GetSection("CompanyManagementMainStorage").Bind(options));
             services.AddBusinessLayer();
+
+            services.AddControllers(options =>
+            {
+                options.RespectBrowserAcceptHeader = true;
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -48,6 +61,8 @@ namespace PP.CompanyManagement.Portal
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "PP.CompanyManagement.Portal v1"));
+
+                app.UseCors("CorsDevPolicy");
             }
 
             app.UseHttpsRedirection();

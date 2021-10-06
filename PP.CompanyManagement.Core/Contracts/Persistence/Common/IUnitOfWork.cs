@@ -20,6 +20,8 @@ namespace PP.CompanyManagement.Core.Interfaces.Persistence.Common
         /// </summary>
         T DataContext { get; }
 
+        bool TransactionOpened { get; }
+
         /// <summary>
         /// Saves all changes within unit of work.
         /// </summary>
@@ -27,5 +29,11 @@ namespace PP.CompanyManagement.Core.Interfaces.Persistence.Common
         /// <exception cref="System.ApplicationException">Validation Errors collection.</exception>
         /// <exception cref="System.Exception">Updating database error.</exception>
         Task<int> SaveAsync(CancellationToken cancellationToken = default);
+
+        Task BeginTransactionAsync(CancellationToken cancellationToken = default);
+
+        Task CommitTransactionAsync(CancellationToken cancellationToken = default);
+
+        Task RollbackTransactionAsync(CancellationToken cancellationToken = default);
     }
 }

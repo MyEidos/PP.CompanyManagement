@@ -8,8 +8,9 @@ namespace PP.CompanyManagement.Core.Exceptions
 {
     public abstract class CustomBaseException : Exception
     {
-        protected CustomBaseException(string message)
-            : base(message)
+        //TODO: implement ISerializable.
+        protected CustomBaseException(string message, Exception? innerException = null)
+            : base(message, innerException)
         {
         }
     }

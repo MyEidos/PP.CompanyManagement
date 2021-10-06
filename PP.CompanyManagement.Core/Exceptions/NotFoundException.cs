@@ -8,8 +8,8 @@ namespace PP.CompanyManagement.Core.Exceptions
 {
     public abstract class NotFoundException : Exception
     {
-        protected NotFoundException(string name, string? message = null)
-            : base(message)
+        protected NotFoundException(string name, string? message = null, Exception? innerException = null)
+            : base(ToMessage(name, message), innerException)
         {
         }
 

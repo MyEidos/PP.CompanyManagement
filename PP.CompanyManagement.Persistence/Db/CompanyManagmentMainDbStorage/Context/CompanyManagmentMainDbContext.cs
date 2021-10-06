@@ -1,23 +1,23 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Options;
-using PP.CompanyManagement.Core.Contracts.Persistence.Db.CompanyManagmentMainDbStorage;
+using PP.CompanyManagement.Core.Contracts.Persistence.Db.CompanyManagementMainDbStorage;
 using PP.CompanyManagement.Core.Entities;
-using PP.CompanyManagement.Core.Interfaces.Persistence.Db.CompanyManagmentMainDbStorage.Context;
+using PP.CompanyManagement.Core.Interfaces.Persistence.Db.CompanyManagementMainDbStorage.Context;
 using PP.CompanyManagement.Persistence.Common;
-using PP.CompanyManagement.Persistence.Db.CompanyManagmentMainDbStorage.Context.EntityConfiguration;
+using PP.CompanyManagement.Persistence.Db.CompanyManagementMainDbStorage.Context.EntityConfiguration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PP.CompanyManagement.Persistence.Db.CompanyManagmentMainDbStorage.Context
+namespace PP.CompanyManagement.Persistence.Db.CompanyManagementMainDbStorage.Context
 {
-    public partial class CompanyManagmentMainDbContext : DbContextBase, ICompanyManagmentMainDbContext
+    public partial class CompanyManagementMainDbContext : DbContextBase, ICompanyManagementMainDbContext
     {
-        private readonly CompanyManagmentMainStorageOptions options;
-        public CompanyManagmentMainDbContext(DbContextOptions<CompanyManagmentMainDbContext> options, IOptions<CompanyManagmentMainStorageOptions> configs)
+        private readonly CompanyManagementMainStorageOptions options;
+        public CompanyManagementMainDbContext(DbContextOptions<CompanyManagementMainDbContext> options, IOptions<CompanyManagementMainStorageOptions> configs)
             : base(options)
         {
             this.options = configs.Value;
@@ -25,22 +25,20 @@ namespace PP.CompanyManagement.Persistence.Db.CompanyManagmentMainDbStorage.Cont
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer(options.DbConnectionString, sqlServerOptionsAction: sqlOptions =>
-            {
-                sqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 3,
-                maxRetryDelay: TimeSpan.FromSeconds(10),
-                errorNumbersToAdd: null);
-            });
+            optionsBuilder.UseSqlServer(options.DbConnectionString);
         }
 
         public DbSet<EmployeeEntity> Employees { get; set; } 
+
+        //SP results
+        public DbSet<ImportEmployeeResult> ImportEmployeeResults { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.HasDefaultSchema("cm");
 
             modelBuilder.ApplyConfiguration(new EmployeeEntityConfiguration());
+            modelBuilder.ApplyConfiguration(new ImportEmployeeResultConfiguration());
 
             // set DeleteBehavior from Cascade to Restrict.
             var cascadeFKs = modelBuilder.Model.GetEntityTypes()
@@ -58,32 +56,32 @@ namespace PP.CompanyManagement.Persistence.Db.CompanyManagmentMainDbStorage.Cont
         }
     }
 
-    public class CompanyManagmentMainDbContextFactory : IDesignTimeDbContextFactory<CompanyManagmentMainDbContext>
+    public class CompanyManagementMainDbContextFactory : IDesignTimeDbContextFactory<CompanyManagementMainDbContext>
     {
         /// <summary>
         /// Creates a new instance of a derived context for EF tools (command line, etc).
         /// Usage example (creates migration with name "init" from Package Manager Console):
-        /// $env:companyManagmentMainDbsqlConnectionString= "Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=.\\PP.CompanyManagement.Persistence\Db\CompanyManagmentMainDbStorage\Local\CompanyManagmentMainDB_local.mdf;Integrated Security=True"
-        /// Add-Migration init -o "Db\CompanyManagmentMainDbStorage\Migrations" -Project "PP.CompanyManagement.Persistence" -StartupProject "PP.CompanyManagement.Persistence" -Verbose -Context "CompanyManagmentMainDbContext"
+        /// $env:CompanyManagementMainDbConnectionString= "Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=D:\Misc\TestProject2\PP.CompanyManagement\PP.CompanyManagement.Persistence\Db\CompanyManagmentMainDbStorage\Local\CompanyManagmentMainDb_local.mdf;Integrated Security=True"
+        /// Add-Migration init -o "Db\CompanyManagementMainDbStorage\Migrations" -Project "PP.CompanyManagement.Persistence" -StartupProject "PP.CompanyManagement.Persistence" -Verbose -Context "CompanyManagementMainDbContext"
         /// 
         /// Apply migrations:
-        /// Update-Database -Project "PP.CompanyManagement.Persistence" -StartupProject "PP.CompanyManagement.Persistence" -Verbose -Context "CompanyManagmentMainDbContext"
+        /// Update-Database -Project "PP.CompanyManagement.Persistence" -StartupProject "PP.CompanyManagement.Persistence" -Verbose -Context "CompanyManagementMainDbContext"
         /// </summary>
         /// <param name="args">Arguments provided by the design-time service.</param>
         /// <returns>
         /// An instance of <typeparamref name="TContext" />.
         /// </returns>
         /// <exception cref="System.InvalidOperationException">Connection string is null</exception>
-        public CompanyManagmentMainDbContext CreateDbContext(string[] args)
+        public CompanyManagementMainDbContext CreateDbContext(string[] args)
         {
-            string sqlConnection = Environment.GetEnvironmentVariable("CompanyManagmentMainDbConnectionString") 
-                ?? Environment.GetEnvironmentVariable("companyManagmentMainDbsqlConnectionString") 
-                ?? throw new InvalidOperationException("Connection string is null. Provide 'CompanyManagmentMainDbConnectionString' enviroement variable.");
+            string sqlConnection = Environment.GetEnvironmentVariable("CompanyManagementMainDbConnectionString") 
+                ?? Environment.GetEnvironmentVariable("companyManagementMainDbsqlConnectionString") 
+                ?? throw new InvalidOperationException("Connection string is null. Provide 'CompanyManagementMainDbConnectionString' enviroement variable.");
 
-            var optionsBuilder = new DbContextOptionsBuilder<CompanyManagmentMainDbContext>();
+            var optionsBuilder = new DbContextOptionsBuilder<CompanyManagementMainDbContext>();
             optionsBuilder.UseSqlServer(sqlConnection);
 
-            return new CompanyManagmentMainDbContext(optionsBuilder.Options, Options.Create<CompanyManagmentMainStorageOptions>(new CompanyManagmentMainStorageOptions() { DbConnectionString = sqlConnection }));
+            return new CompanyManagementMainDbContext(optionsBuilder.Options, Options.Create<CompanyManagementMainStorageOptions>(new CompanyManagementMainStorageOptions() { DbConnectionString = sqlConnection }));
         }
     }
 }
